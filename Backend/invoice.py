@@ -7,14 +7,13 @@ import re
 from pdf2image import convert_from_path
 from PIL import Image
 
-# Set this to your actual Tesseract path if you're on Windows
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# Create output directory if it doesn't exist (for webcam captures)
+
 output_dir = "captured_images"
 os.makedirs(output_dir, exist_ok=True)
 
-# === Image Preprocessing Pipeline ===
+#image preprocessing
 def preprocess_image(image, augment=False):
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -39,13 +38,13 @@ def preprocess_image(image, augment=False):
 
     return normalized
 
-# Function to extract text using pytesseract
+
 def extract_text_from_image(image, augment=False):
     preprocessed = preprocess_image(image, augment=augment)
     text = pytesseract.image_to_string(preprocessed)
     return text
 
-# === Invoice Text Parsing ===
+
 def parse_invoice_text(text):
     lines = text.split('\n')
     data = {}
@@ -80,13 +79,13 @@ def process_pdf(file_path):
         all_data.append(data)
     return all_data
 
-# === Process Image Files ===
+
 def process_image(file_path):
     image = cv2.imread(file_path)
     text = extract_text_from_image(image, augment=True)
     return [parse_invoice_text(text)]
 
-# === Webcam Input Handler ===
+
 def process_webcam():
     cap = cv2.VideoCapture(0)
 
@@ -129,7 +128,6 @@ def save_to_json(data, filename="invoice_data.json"):
         json.dump(data, f, indent=4)
     print(f"✅ Extracted data saved to {filename}")
 
-# === Main Function ===
 def main():
     print("Choose input type:")
     print("1 - PDF")
