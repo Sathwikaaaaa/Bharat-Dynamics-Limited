@@ -1,0 +1,46 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+env/
+.venv/
+myenv/
+
+# Pytest
+.pytest_cache/
+
+# Application output
+captured_images/
+*.log
+
+# Generated invoice output
+Backend/invoice_data.json
+
+# Environment variables
+.env
+.env.*
+
+# IDE / editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+
+# AWS private keys
+*.pem
+
+# Local uploaded invoice storage
+Backend/storage/
+
+# Archives
+*.zip
