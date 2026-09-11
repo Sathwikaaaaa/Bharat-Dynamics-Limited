@@ -95,6 +95,8 @@ class Job(Base):
         Text,
         nullable=True
     )
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
+    invoice = relationship("Invoice")
 
 class User(Base):
     __tablename__ = "users"

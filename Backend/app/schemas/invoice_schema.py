@@ -70,4 +70,5 @@ class JobStatusResponse(BaseModel):
     job_id: str
     file_name: str
     status: str
+    invoice_id: int | None = None
     error_message: str | None = None

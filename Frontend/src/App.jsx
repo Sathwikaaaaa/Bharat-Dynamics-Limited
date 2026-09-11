@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { uploadInvoice, getJobStatus } from "./api";
+
+import {
+  uploadInvoice,
+  getJobStatus,
+  getInvoice,
+} from "./api";
 import Login from "./Login";
 import "./App.css";
-
 function App() {
   const [token, setToken] = useState(
     localStorage.getItem("access_token")
   );
 
+  const [invoice, setInvoice] = useState(null);
   const [file, setFile] = useState(null);
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState("No active job");
@@ -18,27 +23,54 @@ function App() {
     setError("");
     setStatus("No active job");
     setJobId(null);
+    setInvoice(null);
   };
 
   const checkJobStatus = async (id) => {
-    try {
-      const result = await getJobStatus(id, token);
+  try {
+    const result = await getJobStatus(id, token);
 
-      setStatus(result.status);
+    setStatus(result.status);
 
-      if (
-        result.status !== "completed" &&
-        result.status !== "failed"
-      ) {
-        setTimeout(() => {
-          checkJobStatus(id);
-        }, 2000);
+    if (result.status === "completed") {
+      if (result.invoice_id) {
+        const invoiceResult = await getInvoice(
+          result.invoice_id,
+          token
+        );
+
+        console.log(
+          "Processed invoice:",
+          invoiceResult
+        );
+
+        setInvoice(invoiceResult);
+      } else {
+        setError(
+          "Invoice processing completed, but no invoice was created."
+        );
       }
-    } catch (error) {
-      setError(error.message);
-      setStatus("Status check failed");
+
+      return;
     }
-  };
+
+    if (result.status === "failed") {
+      setError(
+        result.error_message || "Invoice processing failed."
+      );
+      return;
+    }
+
+    setTimeout(
+      () => checkJobStatus(id),
+      2000
+    );
+
+  } catch (error) {
+    setError(error.message);
+    setStatus("Status check failed");
+  }
+};
 
   const handleUpload = async () => {
     if (!file) {
@@ -46,16 +78,26 @@ function App() {
       return;
     }
 
+    if (!token) {
+      setError("Please login first.");
+      return;
+    }
+
     try {
       setError("");
+      setInvoice(null);
       setStatus("Uploading...");
 
-      const result = await uploadInvoice(file, token);
+      const result = await uploadInvoice(
+        file,
+        token
+      );
 
       setJobId(result.job_id);
       setStatus("queued");
 
       checkJobStatus(result.job_id);
+
     } catch (error) {
       setError(error.message);
       setStatus("Upload failed");
@@ -80,6 +122,7 @@ function App() {
   return (
     <div className="app">
 
+      {/* Navbar */}
       <header className="navbar">
 
         <div className="logo">
@@ -103,6 +146,7 @@ function App() {
 
       <main className="dashboard">
 
+        {/* Welcome */}
         <div className="welcome">
 
           <h1>
@@ -117,6 +161,7 @@ function App() {
         </div>
 
 
+        {/* Upload */}
         <section className="upload-card">
 
           <h2>
@@ -165,6 +210,7 @@ function App() {
         </section>
 
 
+        {/* Processing Status */}
         <section className="status-card">
 
           <h2>
@@ -199,6 +245,177 @@ function App() {
           )}
 
         </section>
+
+
+        {/* Invoice Results */}
+        {invoice && (
+          <section className="results-card">
+
+            <div className="results-header">
+
+              <div>
+                <h2>
+                  Invoice Results
+                </h2>
+
+                <p>
+                  Extracted invoice information
+                </p>
+              </div>
+
+              <span className="completed-badge">
+                Completed
+              </span>
+
+            </div>
+
+
+            {/* Invoice Information */}
+            <div className="invoice-details">
+
+              <div className="detail-item">
+                <span>Invoice Number</span>
+                <strong>
+                  {invoice.invoice_number || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>Invoice Date</span>
+                <strong>
+                  {invoice.invoice_date || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>Vendor</span>
+                <strong>
+                  {invoice.vendor || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>Customer</span>
+                <strong>
+                  {invoice.customer || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>PO Number</span>
+                <strong>
+                  {invoice.po_number || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>GSTIN</span>
+                <strong>
+                  {invoice.gstin || "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>Subtotal</span>
+                <strong>
+                  {invoice.currency || ""}
+                  {invoice.subtotal ?? "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item">
+                <span>Tax</span>
+                <strong>
+                  {invoice.currency || ""}
+                  {invoice.tax ?? "N/A"}
+                </strong>
+              </div>
+
+              <div className="detail-item total-item">
+                <span>Total</span>
+                <strong>
+                  {invoice.currency || ""}
+                  {invoice.total ?? "N/A"}
+                </strong>
+              </div>
+
+            </div>
+
+
+            {/* Line Items */}
+            <div className="line-items">
+
+              <h3>
+                Line Items
+              </h3>
+
+              {invoice.line_items &&
+              invoice.line_items.length > 0 ? (
+
+                <div className="table-wrapper">
+
+                  <table>
+
+                    <thead>
+                      <tr>
+                        <th>Description</th>
+                        <th>HSN Code</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Amount</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+
+                      {invoice.line_items.map(
+                        (item, index) => (
+
+                          <tr key={index}>
+
+                            <td>
+                              {item.description || "N/A"}
+                            </td>
+
+                            <td>
+                              {item.hsn_code || "N/A"}
+                            </td>
+
+                            <td>
+                              {item.quantity ?? "N/A"}
+                            </td>
+
+                            <td>
+                              {item.unit_price ?? "N/A"}
+                            </td>
+
+                            <td>
+                              {item.amount ?? "N/A"}
+                            </td>
+
+                          </tr>
+
+                        )
+                      )}
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              ) : (
+
+                <p className="no-items">
+                  No line items found.
+                </p>
+
+              )}
+
+            </div>
+
+          </section>
+        )}
 
       </main>
 

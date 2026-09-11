@@ -28,6 +28,8 @@ def process_invoice_file(
     else:
         data = process_image(file_path)
 
+    created_invoice_ids = []
+
     for invoice in data:
 
         invoice["validation"] = validate_invoice(
@@ -36,9 +38,13 @@ def process_invoice_file(
 
         if invoice["validation"]["is_valid"]:
 
-            create_invoice(
+            created_invoice = create_invoice(
                 db,
                 invoice
+            )
+
+            created_invoice_ids.append(
+                created_invoice.id
             )
 
     logger.info(
@@ -46,4 +52,4 @@ def process_invoice_file(
         file_path
     )
 
-    return data
+    return data, created_invoice_ids

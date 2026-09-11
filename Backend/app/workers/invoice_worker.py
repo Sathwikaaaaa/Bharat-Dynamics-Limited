@@ -53,16 +53,23 @@ class InvoiceWorker:
             )
 
             # Process invoice
-            process_invoice_file(
+            result, invoice_ids = process_invoice_file(
                 downloaded_path,
                 extension,
                 db
             )
 
+            invoice_id = (
+                invoice_ids[0]
+                if invoice_ids
+                else None
+            )
+
             update_job_status(
                 db,
                 job_id,
-                "completed"
+                "completed",
+                invoice_id=invoice_id
             )
 
             logger.info(

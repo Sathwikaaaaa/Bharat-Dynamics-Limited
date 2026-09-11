@@ -297,8 +297,9 @@ def get_job_status(
         )
 
     return {
-        "job_id": job.job_id,
-        "file_name": job.file_name,
-        "status": job.status,
-        "error_message": job.error_message
-    }
+    "job_id": job.job_id,
+    "file_name": job.file_name,
+    "status": job.status,
+    "invoice_id": job.invoice_id,
+    "error_message": job.error_message
+}

@@ -35,7 +35,8 @@ def update_job_status(
     db: Session,
     job_id: str,
     status: str,
-    error_message: str = None
+    error_message: str = None,
+    invoice_id: int = None
 ):
     job = get_job(db, job_id)
 
@@ -44,6 +45,9 @@ def update_job_status(
 
     job.status = status
     job.error_message = error_message
+
+    if invoice_id is not None:
+        job.invoice_id = invoice_id
 
     db.commit()
     db.refresh(job)
