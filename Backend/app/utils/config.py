@@ -1,9 +1,9 @@
 import os
-
+import shutil
 
 TESSERACT_CMD = os.getenv(
     "TESSERACT_CMD",
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    shutil.which("tesseract") or "tesseract"
 )
 
 OUTPUT_DIR = os.getenv(
